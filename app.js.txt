@@ -1,0 +1,67 @@
+// CONFIG
+const rewards = [
+  { name: '10% OFF', weight: 30 },
+  { name: 'Free Coffee', weight: 20 },
+  { name: '5% OFF', weight: 40 },
+  { name: 'No Prize', weight: 10 }
+];
+
+// Map config, QR locations etc. remain same...
+const qrLocations = [
+  { id: 'park', lat: 12.123, lng: -68.900 },
+  { id: 'mall', lat: 12.135, lng: -68.930 }
+];
+
+function initMap() {
+  const center = { lat: 12.125, lng: -68.915 };
+  const map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 13,
+    center
+  });
+  qrLocations.forEach(loc => {
+    const marker = new google.maps.Marker({
+      position: { lat: loc.lat, lng: loc.lng },
+      map,
+      title: `QR zone: ${loc.id}`
+    });
+    marker.addListener('click', () => {
+      alert(`Zone: ${loc.id}`);
+    });
+  });
+}
+
+function weightedRandom(list) {
+  const total = list.reduce((sum, r) => sum + r.weight, 0);
+  let r = Math.random() * total;
+  for (const item of list) {
+    if (r < item.weight) {
+      return item;
+    }
+    r -= item.weight;
+  }
+  return list[list.length - 1];
+}
+
+function spin() {
+  const reward = weightedRandom(rewards);
+  document.getElementById('rewardText').innerText = `🎉 You won: ${reward.name}`;
+  generateQRCode(reward.name);
+}
+
+function generateQRCode(data) {
+  const encoded = encodeURIComponent(data);
+  const size = '200x200';
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encoded}&size=${size}`;
+  // Use the QR URL directly in <img>
+  const img = document.getElementById('qrImage');
+  img.src = qrUrl;
+}
+
+window.addEventListener('load', () => {
+  if (typeof google === 'object' && typeof google.maps === 'object') {
+    initMap();
+  } else {
+    console.error('Google Maps did not load properly.');
+  }
+  document.getElementById('spinBtn').addEventListener('click', spin);
+});
